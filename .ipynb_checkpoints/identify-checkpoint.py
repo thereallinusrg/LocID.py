@@ -19,6 +19,20 @@ import geopandas as gpd
 import QTM as q
 
 # Polygon Mapping
+def poly_g2z(pgxy):
+    '''
+    Converts Polygon to ZOT coordinates
+
+    Parameters: pgxy (shapely.geometry Polygon): Polygon to convert. Polygon with WGS84 coordinates
+    Returns:    pzxy (shapely.geometry Polygon): Polygon with ZOT coordinates
+    '''
+    poly_mapped = mapping(pgxy)
+    poly_coordinates = poly_mapped['coordinates'][0]
+
+    l= list(map(lambda x:q.GeoPoint(x[1], x[0]), poly_coordinates))
+
+    return Polygon(list(map(lambda y:q.GeoToZot(y).raw(), l)))
+
 # Recursive Grid Polygon Creation
 
 
