@@ -10,6 +10,7 @@ Its code is used to identify, as in creating an identifier for, objects.
 from array import array
 import re
 import ast
+from copy import deepcopy 
 
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString, MultiLineString, mapping
 
@@ -139,10 +140,10 @@ def stack2gdf(stacks, SeT_lvl, max_lvl):
             lvlst.append(lvl)
 
 
-    print(n+1, "stacks with max lvl", lvl)
+    #print(n+1, "stacks with max lvl", lvl)
 
     gdf = gpd.GeoDataFrame(data={'n':nlst, 'lvl':lvlst, 'node_x':xlst, 'node_y':ylst, 'QID':qlst, 'xnode':xnlst, 'ynode':ynlst},geometry=glst)
-    print("Polygons in gdf:", len(gdf), "--> That is the number of facets between SeT_lvl", SeT_lvl, "and the max lvl", lvl)
+    #print("Polygons in gdf:", len(gdf), "--> That is the number of facets between SeT_lvl", SeT_lvl, "and the max lvl", lvl)
 
     return gdf
 
@@ -164,7 +165,7 @@ def create_missing_facets(gdf, polygon):
                     polygon (Polygon): Polygon to create grid for. Shapely Polygon with WGS84 coordinates
         Returns:    grid (GeoDataFrame): GeoDataFrame of Facets with qloc column
     '''
-    polygon_gdf = gpd.GeoDataFrame(geometry=[id.poly_g2z(polygon)])
+    polygon_gdf = gpd.GeoDataFrame(geometry=[poly_g2z(polygon)])
     msng_pc = polygon_gdf
 
     grid = gpd.GeoDataFrame()
@@ -207,7 +208,7 @@ def create_missing_facets(gdf, polygon):
         gdfin = gpd.GeoDataFrame()
         lvl_dwn = lvl - row.lvl
 
-        out_gdf = id.tri_split(snx, sny, lvl_dwn, lst, gdfin, msng_pc)
+        out_gdf = tri_split(snx, sny, lvl_dwn, lst, gdfin, msng_pc)
         msng_pc = msng_pc.overlay(out_gdf, how='difference')
         out_gdf['qloc'] = out_gdf.apply(lambda row: prepend_qloc(row, qloc_base), axis=1)
         grid_f = pd.concat([grid_f, out_gdf], ignore_index=True)
@@ -264,10 +265,15 @@ def map_poly(polygon, tol, lvl, bytes_out=False):
     grid = create_missing_facets(gdf, polygon)
 
     # intersect polygon with grid
-    full_pc = gpd.GeoDataFrame(geometry=[id.poly_g2z(polygon)])
+    full_pc = gpd.GeoDataFrame(geometry=[poly_g2z(polygon)])
     qid_lst = grid.overlay(full_pc, how='intersection').qloc.to_list()
 
-    return qid_lst
+    # Determine SeT
+    SeT_qid = qid_lst[0][:SeT_lvl+1]
+    # Omit the SeT from the qid_lst
+    qid_lst = [sublist[SeT_lvl:] for sublist in qid_lst]
+
+    return qid_lst, SeT_qid
 
 
 def create_tree(lst):
@@ -300,10 +306,14 @@ def encode_polygon(polygon, tol, lvl, bytes_out=False):
                 lvl (int): maximum encoding level (Maximum = 30)
     Returns:    locid (bytes): LocID of polygon
     '''
-    qids = map_poly(polygon, tol, lvl, bytes_out=False)  # Polygon Mapping is only supported with bytes_out = False atm
+    qid_lst, SeT_qid = map_poly(polygon, tol, lvl, bytes_out=False)  # Polygon Mapping is only supported with bytes_out = False atm
    
     # Compress QTM coordinates to polygon LocID
-    locid = create_tree(qids)
+    qid_tree = create_tree(qid_lst)
+    
+    # Add polygon identifier after SeT
+    locid = SeT_qid + [8] + qid_tree
+
 
     # Return LocID - as bytes or list
     if bytes_out is True:

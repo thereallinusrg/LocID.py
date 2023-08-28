@@ -21,6 +21,9 @@ def split_qlocid(qlocid):
         geoM (bytearray): geometry part of qlocid
         geomType (int): geometry type    
     '''
+    if type(qlocid) is not bytes:
+        qlocid = bytes(qlocid)
+        
     no_oct = qlocid[1:]
     oct_id = qlocid[:1]
 
