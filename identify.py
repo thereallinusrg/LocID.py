@@ -250,6 +250,10 @@ def map_poly(polygon, tol, lvl, bytes_out=False):
     if max_lvl > lvl:
         max_lvl = lvl
 
+
+    if SeT_lvl > lvl:
+        raise ValueError(f"The minimum encoding level (lvl) must at least be as high as the SeT level, which is {SeT_lvl}")
+
     # turn stacks into gdf
     gdf = stack2gdf(stacks, SeT_lvl, max_lvl)
 
@@ -307,7 +311,7 @@ def encode_polygon(polygon, tol, lvl, bytes_out=False):
     Returns:    locid (bytes): LocID of polygon
     '''
     qid_lst, SeT_qid = map_poly(polygon, tol, lvl, bytes_out=False)  # Polygon Mapping is only supported with bytes_out = False atm
-   
+    
     # Compress QTM coordinates to polygon LocID
     qid_tree = create_tree(qid_lst)
     
