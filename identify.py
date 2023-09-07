@@ -323,8 +323,7 @@ def encode_polygon(polygon, tol, lvl, bytes_out=False):
         return locid
 
 
-def identify(geo_object, tol, lvl=17):
-    # lvl is not a fixed parameter, but a parameter to be determined
+def identify(geo_object, tol=1e-06, lvl=20):
 
     # Encoding of a point
     if type(geo_object) is Point:
