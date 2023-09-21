@@ -109,6 +109,9 @@ def contains_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index):
     return set(branches1) & set(branches2) == set(branches2)
 
 
+def change_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index):
+    branches1, branches2 = compare_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index)
+    return((len(set(branches1) - set(branches2)) + len(set(branches2) - set(branches1)))/len(branches1))
 
 def match(qlocid1, qlocid2):
     ''' 
@@ -200,3 +203,47 @@ def contains(qlocid1, qlocid2):
     else:
         raise ValueError("Unsupported object type to match or bad encoded qlocids")
   
+def change(qlocid1, qlocid2):
+    ''' 
+    Measure change between two qlocids
+
+    Parameters:
+        qlocid1 (bytes): qlocid 1
+        qlocid2 (bytes): qlocid 2
+
+    Returns:
+        IoU (float): Intersection over Union, 1.0 = identical, 0.0 = no overlap
+        SeT (bytes): Smallest enclosing Triangle, enclosing both qlocids         
+    '''
+    SeT1, geoM1, geomType1 = split_qlocid(qlocid1)
+    SeT2, geoM2, geomType2 = split_qlocid(qlocid2)
+
+    if geomType1 != geomType2:
+        raise ValueError("The two qlocids are not of the same geometry type.")
+   
+    #SeT likenesses
+    shorter = min(len(SeT1), len(SeT2))
+    diff_index = np.argmax(np.not_equal(SeT1[:shorter], SeT2[:shorter]))
+   
+    if diff_index == 0:
+        diff_index = shorter
+
+    SeT = SeT1[:diff_index] # the trunk
+
+
+    # Matching of a point
+    # TODO: Implement point matching
+    if geomType1 == 0:
+        raise NotImplementedError("Point change detection is not supported")
+
+    # Matching of a polygon
+    elif geomType1 == 8:
+        return change_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index)
+    
+    # Matching of a line
+    # TODO: Implement line matching
+    elif geomType1 == 7:
+        raise NotImplementedError("Line change detection is not supported yet")
+
+    else:
+        raise ValueError("Unsupported object type to detect changes or bad encoded qlocids")
