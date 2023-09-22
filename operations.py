@@ -1,6 +1,6 @@
 '''
 QTM LocID Operations (match & compare)
-Version Version 0.2.0 - 2023-08-28
+Version Version 0.2.1 - 2023-09-22
 Author: linus.rueegg@geo.uzh.ch
 
 This script is part of the LocID project.
@@ -10,22 +10,22 @@ Its code is used to perform quasi-spatial operations on LocIDs.
 import numpy as np
 
 
-def split_qlocid(qlocid):
+def split_locid(locid):
     '''
-    Split qlocid into SeT and geometry parts
+    Split locid into SeT and geometry parts
 
     Parameters:
-        qlocid (bytes): qlocid
+        locid (bytes): locid
     Returns:
-        SeT (bytearray): SeT part of qlocid
-        geoM (bytearray): geometry part of qlocid
+        SeT (bytearray): SeT part of locid
+        geoM (bytearray): geometry part of locid
         geomType (int): geometry type    
     '''
-    if type(qlocid) is not bytes:
-        qlocid = bytes(qlocid)
+    if type(locid) is not bytes:
+        locid = bytes(locid)
         
-    no_oct = qlocid[1:]
-    oct_id = qlocid[:1]
+    no_oct = locid[1:]
+    oct_id = locid[:1]
 
     if b'\x08' in no_oct:
         geomType = 8; #print("Polygon")
@@ -38,7 +38,7 @@ def split_qlocid(qlocid):
         SeT = oct_id + SeT
     else:
         geomType = 0; #print("Point")
-        SeT = qlocid
+        SeT = locid
         geoM = b''
     
     return SeT, geoM, geomType
@@ -49,7 +49,7 @@ def inflate_geom_tree(geoM, bytes_out=True):
     Inflates a geometry tree to a list of full QTM coordinates
 
     Parameters:
-        geoM (bytearray): geometry part of a qlocid with geometry
+        geoM (bytearray): geometry part of a locid with geometry
         bytes_out (bool): if true, return a list of bytearrays, else return a list of lists
     Returns:
         tree (list): inflated geometry tree
@@ -70,19 +70,19 @@ def inflate_geom_tree(geoM, bytes_out=True):
 
 def compare_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index):
     '''
-    Compare two qlocids with geometry
+    Compare two locids with geometry
 
     Parameters:
-        SeT1 (bytearray): SeT part of qlocid 1
-        geoM1 (bytearray): geometry part of qlocid 1
-        SeT2 (bytearray): SeT part of qlocid 2
-        geoM2 (bytearray): geometry part of qlocid 2
-        SeT (bytearray): Smallest enclosing Triangle, enclosing both qlocids
+        SeT1 (bytearray): SeT part of locid 1
+        geoM1 (bytearray): geometry part of locid 1
+        SeT2 (bytearray): SeT part of locid 2
+        geoM2 (bytearray): geometry part of locid 2
+        SeT (bytearray): Smallest enclosing Triangle, enclosing both locids
         diff_index (int): index of first differing byte in SeT
    
     Returns:
         IoU (float): Intersection over Union, 1.0 = identical, 0.0 = no overlap
-        SeT (bytearray): Smallest enclosing Triangle, enclosing both qlocids 
+        SeT (bytearray): Smallest enclosing Triangle, enclosing both locids 
     '''
     #Geometry likenesses
     limb1 = SeT1[diff_index:]
@@ -113,23 +113,23 @@ def change_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index):
     branches1, branches2 = compare_geom(SeT1, geoM1, SeT2, geoM2, SeT, diff_index)
     return((len(set(branches1) - set(branches2)) + len(set(branches2) - set(branches1)))/len(branches1))
 
-def match(qlocid1, qlocid2):
+def match(locid1, locid2):
     ''' 
-    Match two qlocids
+    Match two locids
 
     Parameters:
-        qlocid1 (bytes): qlocid 1
-        qlocid2 (bytes): qlocid 2
+        locid1 (bytes): locid 1
+        locid2 (bytes): locid 2
 
     Returns:
         IoU (float): Intersection over Union, 1.0 = identical, 0.0 = no overlap
-        SeT (bytes): Smallest enclosing Triangle, enclosing both qlocids         
+        SeT (bytes): Smallest enclosing Triangle, enclosing both locids         
     '''
-    SeT1, geoM1, geomType1 = split_qlocid(qlocid1)
-    SeT2, geoM2, geomType2 = split_qlocid(qlocid2)
+    SeT1, geoM1, geomType1 = split_locid(locid1)
+    SeT2, geoM2, geomType2 = split_locid(locid2)
 
     if geomType1 != geomType2:
-        raise ValueError("The two qlocids are not of the same geometry type.")
+        raise ValueError("The two locids are not of the same geometry type.")
    
     #SeT likenesses
     shorter = min(len(SeT1), len(SeT2))
@@ -156,26 +156,26 @@ def match(qlocid1, qlocid2):
         raise NotImplementedError("Line matching is not supported yet")
 
     else:
-        raise ValueError("Unsupported object type to match or bad encoded qlocids")
+        raise ValueError("Unsupported object type to match or bad encoded locids")
 
 
-def contains(qlocid1, qlocid2):
+def contains(locid1, locid2):
     '''
-    Check if qlocid1 contains qlocid2
+    Check if locid1 contains locid2
 
     Parameters:
-        qlocid1 (bytes): qlocid 1 --> The larger geometry
-        qlocid2 (bytes): qlocid 2 --> The smaller, contained geometry
+        locid1 (bytes): locid 1 --> The larger geometry
+        locid2 (bytes): locid 2 --> The smaller, contained geometry
 
     Returns:
         IoU (float): Intersection over Union, 1.0 = identical, 0.0 = no overlap
-        SeT (bytes): Smallest enclosing Triangle, enclosing both qlocids        
+        SeT (bytes): Smallest enclosing Triangle, enclosing both locids        
     '''
-    SeT1, geoM1, geomType1 = split_qlocid(qlocid1)
-    SeT2, geoM2, geomType2 = split_qlocid(qlocid2)
+    SeT1, geoM1, geomType1 = split_locid(locid1)
+    SeT2, geoM2, geomType2 = split_locid(locid2)
 
     if geomType1 != geomType2:
-        raise ValueError("The two qlocids are not of the same geometry type.")
+        raise ValueError("The two locids are not of the same geometry type.")
     
     # SeT likenesses
     shorter = min(len(SeT1), len(SeT2))
@@ -201,25 +201,25 @@ def contains(qlocid1, qlocid2):
         raise NotImplementedError("Line matching is not supported yet")
 
     else:
-        raise ValueError("Unsupported object type to match or bad encoded qlocids")
+        raise ValueError("Unsupported object type to match or bad encoded locids")
   
-def change(qlocid1, qlocid2):
+def change(locid1, locid2):
     ''' 
-    Measure change between two qlocids
+    Measure change between two locids
 
     Parameters:
-        qlocid1 (bytes): qlocid 1
-        qlocid2 (bytes): qlocid 2
+        locid1 (bytes): locid 1
+        locid2 (bytes): locid 2
 
     Returns:
         IoU (float): Intersection over Union, 1.0 = identical, 0.0 = no overlap
-        SeT (bytes): Smallest enclosing Triangle, enclosing both qlocids         
+        SeT (bytes): Smallest enclosing Triangle, enclosing both locids         
     '''
-    SeT1, geoM1, geomType1 = split_qlocid(qlocid1)
-    SeT2, geoM2, geomType2 = split_qlocid(qlocid2)
+    SeT1, geoM1, geomType1 = split_locid(locid1)
+    SeT2, geoM2, geomType2 = split_locid(locid2)
 
     if geomType1 != geomType2:
-        raise ValueError("The two qlocids are not of the same geometry type.")
+        raise ValueError("The two locids are not of the same geometry type.")
    
     #SeT likenesses
     shorter = min(len(SeT1), len(SeT2))
@@ -246,4 +246,4 @@ def change(qlocid1, qlocid2):
         raise NotImplementedError("Line change detection is not supported yet")
 
     else:
-        raise ValueError("Unsupported object type to detect changes or bad encoded qlocids")
+        raise ValueError("Unsupported object type to detect changes or bad encoded locids")
