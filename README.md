@@ -1,5 +1,5 @@
-# LocID - A Unique Object at a Location Identifier
-#### Designing a global hierarchical geographic identifier that accounts for spatial inaccuracy and computational performance
+# LocID - A Unique Object-at-a-Location Identifier
+#### Designing a global hierarchical geographical identifier that accounts for spatial inaccuracy and computational performance
 ###### Master thesis at the University of Zurich
 Linus Rüegg<sup>1</sup>, Robert Weibel<sup>1</sup>, Cheng Fu<sup>1</sup>, Thomas Phillips<sup>2</sup> <br>
 <sub>
