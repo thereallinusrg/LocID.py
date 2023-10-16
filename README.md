@@ -8,6 +8,6 @@ Linus Rüegg<sup>1</sup>, Robert Weibel<sup>1</sup>, Cheng Fu<sup>1</sup>, Thoma
     University of Colorado Boulder; Lead Geo Innovations, Swiss Re Management Ltd
 </sub>
 
-This repository contains the referenc implementation of LocID in Python.
+This repository contains the reference implementation of LocID in Python.
 LocID is a DGGS based global spatial identifier.
 
