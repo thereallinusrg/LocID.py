@@ -11,3 +11,4 @@ Linus Rüegg<sup>1</sup>, Robert Weibel<sup>1</sup>, Cheng Fu<sup>1</sup>, Thoma
 This repository contains the reference implementation of LocID in Python.
 LocID is a DGGS based global spatial identifier.
 
+The paper describing LocID can be found here: <a> https://linusrg.ch/LocID.pdf </a>
